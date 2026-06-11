@@ -1,0 +1,16 @@
+# 의존성 패키지 및 빌드 결과물
+node_modules/
+dist/
+
+# ⚠️ 개인정보 및 브라우저 세션 데이터 (가장 중요 ⭐)
+.env
+browser-data/
+
+# 에디터 설정 및 시스템 파일
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# 로그 파일
+*.log
