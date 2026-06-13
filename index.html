@@ -18,18 +18,20 @@
     }
     h2::before { content: '🌲'; font-size: 22px; }
 
+    /* 💡 수정됨: 세로 가림 및 스크롤바 현상을 해결하기 위해 overflow 속성 제거 */
     .search-box { 
-      margin-bottom: 25px; display: flex; gap: 15px; align-items: center; background: #161622; padding: 20px; border-radius: 12px; border: 1px solid #252538; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); position: relative; flex-wrap: wrap;
+      margin-bottom: 25px; display: flex; gap: 15px; align-items: center; background: #161622; padding: 20px; border-radius: 12px; border: 1px solid #252538; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4); position: relative; 
+      flex-wrap: nowrap; /* 줄바꿈 절대 방지 */
     }
 
-    .custom-date-picker { position: relative; display: inline-block; }
-    .date-display { background-color: #222232; border: 1px solid #35354F; color: #FFFFFF; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none; }
+    .custom-date-picker { position: relative; display: inline-block; flex-shrink: 0; }
+    .date-display { background-color: #222232; border: 1px solid #35354F; color: #FFFFFF; padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 14px; cursor: pointer; display: flex; align-items: center; gap: 10px; user-select: none; white-space: nowrap; }
     .date-display:hover { border-color: #8B5CF6; background-color: #2A2A3F; }
 
     .text-input-form { background-color: #222232; border: 1px solid #35354F; color: #FFFFFF; padding: 9px 14px; border-radius: 8px; font-weight: 600; font-size: 14px; outline: none; width: 140px; transition: border-color 0.2s; }
     .text-input-form:focus { border-color: #8B5CF6; }
 
-    label { font-size: 13px; font-weight: 700; color: #A0A0B5; display: flex; align-items: center; gap: 8px; }
+    label { font-size: 13px; font-weight: 700; color: #A0A0B5; display: flex; align-items: center; gap: 8px; white-space: nowrap; flex-shrink: 0; }
 
     .calendar-dropdown {
       display: none; position: absolute; top: calc(100% + 8px); left: 0; background-color: #1A1A26; border: 1px solid #35354F; border-radius: 12px; padding: 20px; width: 320px; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6); z-index: 9999;
@@ -51,10 +53,9 @@
     .day-item.in-range { background-color: rgba(255, 183, 77, 0.15) !important; color: #FFB74D !important; border-radius: 0; }
     .day-item .badge-text { font-size: 9px; font-weight: 700; transform: scale(0.9); margin-top: 1px; opacity: 0.9; }
 
-    button { color: #FFFFFF; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+    button { color: #FFFFFF; border: none; padding: 11px 20px; border-radius: 8px; cursor: pointer; font-weight: 700; font-size: 14px; transition: all 0.3s ease; box-shadow: 0 2px 8px rgba(0,0,0,0.2); white-space: nowrap; flex-shrink: 0; }
     #searchBtn { background: linear-gradient(135deg, #7C4DFF 0%, #6200EE 100%); } 
-    #searchBtn:hover { background: linear-gradient(135deg, #9E7CFF 0%, #7C4DFF 100%); box-shadow: 0 0 15px rgba(124, 77, 255, 0.5); transform: translateY(-1px); }
-    #pauseBtn { background-color: #E65100; display: none; } #pauseBtn:hover { background-color: #EF6C00; box-shadow: 0 0 12px rgba(230, 81, 0, 0.4); }
+    #searchBtn:hover { box-shadow: 0 0 15px rgba(124, 77, 255, 0.5); transform: translateY(-1px); }
     #csvBtn { background-color: #2A2A3F; border: 1px solid #3D3D5C; } #csvBtn:hover { background-color: #353552; }
 
     #status { font-size: 14px; font-weight: 600; color: #FFB74D; margin-bottom: 20px; padding: 12px 16px; background: rgba(255, 183, 77, 0.06); border-left: 4px solid #FFA726; border-radius: 6px; }
@@ -62,16 +63,14 @@
     table { width: 100%; border-collapse: separate; border-spacing: 0; background: #12121A; border-radius: 12px; overflow: hidden; border: 1px solid #222232; box-shadow: 0 4px 25px rgba(0, 0, 0, 0.3); }
     th, td { padding: 14px 18px; text-align: left; font-size: 14px; }
     
-    /* 💡 수정됨: 줄바꿈 방지 및 수직 중앙 정렬 추가 */
     th[data-key] { 
       background-color: #1A1A26; color: #FFFFFF; font-weight: 700; border-bottom: 2px solid #2D2D44; letter-spacing: 0.5px; 
       cursor: pointer; user-select: none; transition: background-color 0.2s; 
-      white-space: nowrap; /* 글자와 화살표가 두 줄로 쪼개지는 현상 방지 */
-      vertical-align: middle; /* 세로 정렬 중앙 고정 */
+      white-space: nowrap; 
+      vertical-align: middle; 
     }
     th[data-key]:hover { background-color: #2D2D44; }
     
-    /* 💡 수정됨: 화살표 아이콘 세로 정렬 보정 */
     .sort-icon { 
       display: inline-block; width: 12px; margin-left: 6px; font-size: 11px; color: #BB86FC; 
       vertical-align: middle; 
@@ -126,6 +125,21 @@
   <h2>전국 휴양림 공방 실시간 최저가 및 거리 조회</h2>
   
   <div class="search-box">
+    <label>지역: 
+      <select id="regionSelect" class="text-input-form" style="width: 150px; cursor: pointer;">
+        <option value="전체">🗺️ 전체 지역</option>
+        <option value="서울/인천/경기">📍 서울/인천/경기</option>
+        <option value="강원">📍 강원</option>
+        <option value="충북">📍 충북</option>
+        <option value="대전/충남">📍 대전/충남</option>
+        <option value="전북">📍 전북</option>
+        <option value="광주/전남">📍 광주/전남</option>
+        <option value="대구/경북">📍 대구/경북</option>
+        <option value="부산/경남">📍 부산/경남</option>
+        <option value="제주">📍 제주</option>
+      </select>
+    </label>
+
     <div class="custom-date-picker">
       <div class="date-display" id="dateDisplay">📅 날짜 설정 로드 중...</div>
       <div class="calendar-dropdown" id="calendarDropdown">
@@ -144,9 +158,8 @@
     <label>출발지: <input type="text" id="originInput" class="text-input-form" value="동수원중학교"></label>
     <label>목적지: <input type="text" id="destInput" class="text-input-form" placeholder="선택사항(예: 해수욕장)"></label>
 
-    <button id="searchBtn">조회 시작 (로그인 창 열기)</button>
-    <button id="pauseBtn">일시중지</button>
-    <button id="csvBtn">현재까지 결과 CSV 저장</button>
+    <button id="searchBtn">조회 시작</button>
+    <button id="csvBtn">CSV 저장</button>
   </div>
 
   <div id="status">날짜를 고르고 조회를 시작하세요. (원하는 칼럼 이름을 클릭하여 정렬할 수 있습니다)</div>
@@ -181,7 +194,7 @@
   <script>
     let count = 0;
     let crawledDataBackup = [];
-    let isPausedState = false;
+    let crawlState = 'stopped'; 
 
     let calYear = 2026;
     let calMonth = 5; 
@@ -418,49 +431,60 @@
     window.api.onCrawlProgress((item) => {
       count++;
       crawledDataBackup.push(item);
-      document.getElementById('status').innerText = `🔄 전국 전수 조사 및 카카오 내비 복합 경로 연동 중... (현재 ${count}개 매칭 완료)`;
+      document.getElementById('status').innerText = `🔄 조건 매칭 및 복합 이동 경로 연동 중... (현재 ${count}개 매칭 완료)`;
       renderTable(); 
     });
 
+    function updateSearchBtnUI() {
+      const btn = document.getElementById('searchBtn');
+      if (crawlState === 'stopped') {
+        btn.innerText = '조회 시작';
+        btn.style.background = 'linear-gradient(135deg, #7C4DFF 0%, #6200EE 100%)';
+      } else if (crawlState === 'running') {
+        btn.innerText = '일시중지';
+        btn.style.background = '#E65100'; 
+      } else if (crawlState === 'paused') {
+        btn.innerText = '이어하기';
+        btn.style.background = 'linear-gradient(135deg, #7C4DFF 0%, #6200EE 100%)'; 
+      }
+    }
+
     document.getElementById('searchBtn').addEventListener('click', async () => {
-      if (!checkInDate || !checkOutDate) return alert('입실일과 퇴실일을 완벽하게 선택해주세요.');
-      const origin = document.getElementById('originInput').value.trim();
-      const destination = document.getElementById('destInput').value.trim();
-      if (!origin) return alert('출발지를 입력해 주세요.');
+      if (crawlState === 'stopped') {
+        if (!checkInDate || !checkOutDate) return alert('입실일과 퇴실일을 완벽하게 선택해주세요.');
+        const origin = document.getElementById('originInput').value.trim();
+        const destination = document.getElementById('destInput').value.trim();
+        if (!origin) return alert('출발지를 입력해 주세요.');
 
-      const startDate = formatDateToString(checkInDate);
-      const endDate = formatDateToString(checkOutDate);
+        const startDate = formatDateToString(checkInDate);
+        const endDate = formatDateToString(checkOutDate);
+        const regionFilter = document.getElementById('regionSelect').value;
 
-      document.getElementById('resultTable').innerHTML = '';
-      count = 0;
-      crawledDataBackup = [];
-      isPausedState = false;
-      
-      const pauseBtn = document.getElementById('pauseBtn');
-      pauseBtn.innerText = '일시중지';
-      pauseBtn.style.backgroundColor = '#E65100';
-      pauseBtn.style.display = 'inline-block';
+        document.getElementById('resultTable').innerHTML = '';
+        count = 0;
+        crawledDataBackup = [];
+        
+        crawlState = 'running';
+        updateSearchBtnUI();
 
-      document.getElementById('status').innerText = '🚀 크롬 브라우저 및 카카오 API 로드 중...';
-      await window.api.startCrawl({ startDate, endDate, origin, destination });
-      
-      pauseBtn.style.display = 'none';
-      document.getElementById('status').innerText = `🎉 조회 최종 완료! (총 ${count}개의 연산 처리 완료) 원하는 칼럼을 눌러 정렬해보세요.`;
-    });
+        document.getElementById('status').innerText = '🚀 크롬 브라우저 및 카카오 API 로드 중...';
+        await window.api.startCrawl({ startDate, endDate, origin, destination, regionFilter });
+        
+        crawlState = 'stopped';
+        updateSearchBtnUI();
+        document.getElementById('status').innerText = `🎉 조회 최종 완료! (총 ${count}개의 연산 처리 완료) 원하는 칼럼을 눌러 정렬해보세요.`;
 
-    document.getElementById('pauseBtn').addEventListener('click', async () => {
-      const pauseBtn = document.getElementById('pauseBtn');
-      if (!isPausedState) {
+      } else if (crawlState === 'running') {
         await window.api.pauseCrawl();
-        isPausedState = true;
-        pauseBtn.innerText = '이어하기';
-        pauseBtn.style.backgroundColor = '#0288d1';
+        crawlState = 'paused';
+        updateSearchBtnUI();
         document.getElementById('status').innerText = `⏸️ 조사가 일시중지 되었습니다. (현재까지 총 ${count}개 수집 완료)`;
-      } else {
-        await window.api.resumeCrawl();
-        isPausedState = false;
-        pauseBtn.innerText = '일시중지';
-        pauseBtn.style.backgroundColor = '#E65100';
+
+      } else if (crawlState === 'paused') {
+        const regionFilter = document.getElementById('regionSelect').value;
+        await window.api.resumeCrawl(regionFilter);
+        crawlState = 'running';
+        updateSearchBtnUI();
         document.getElementById('status').innerText = `🔄 조사를 재개합니다.`;
       }
     });
@@ -472,6 +496,16 @@
       const isSaved = await window.api.saveCSV(dataToExport);
       if (isSaved) alert('현재 화면에 노출된 정렬 순서 그대로 CSV 저장이 완료되었습니다!');
     });
+
+    const triggerSearchOnEnter = (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault(); 
+        document.getElementById('searchBtn').click();
+      }
+    };
+    document.getElementById('originInput').addEventListener('keydown', triggerSearchOnEnter);
+    document.getElementById('destInput').addEventListener('keydown', triggerSearchOnEnter);
+    document.getElementById('regionSelect').addEventListener('keydown', triggerSearchOnEnter);
   </script>
 </body>
 </html>

@@ -4,16 +4,13 @@ const fs = require('fs');
 const { chromium } = require('playwright');
 const axios = require('axios');
 
-// 💡 [버그 수정] 개발 환경, 폴더형(win-unpacked), 단독 실행형(Portable) 모두를 만족하는 .env 경로 연산
+// 개발 환경, 폴더형(win-unpacked), 단독 실행형(Portable) 모두를 만족하는 .env 경로 연산
 let envPath;
 if (!app.isPackaged) {
-  // 1. 개발 환경 (npm start)
   envPath = path.join(__dirname, '.env');
 } else if (process.env.PORTABLE_EXECUTABLE_DIR) {
-  // 2. 단독 실행형 파일 환경 (dist 폴더의 단독 .exe 파일 실행 시)
   envPath = path.join(process.env.PORTABLE_EXECUTABLE_DIR, '.env');
 } else {
-  // 3. 폴더 분해형 환경 (win-unpacked 폴더 내부에서 실행 시)
   envPath = path.join(path.dirname(app.getPath('exe')), '.env');
 }
 
@@ -27,6 +24,7 @@ const kakaoHeaders = { 'Authorization': `KakaoAK ${KAKAO_REST_API_KEY}` };
 
 let mainWindow;
 let isPaused = false;
+let globalRegionFilter = '전체'; // 💡 실시간 지역 추적을 위해 모듈 스코프로 변경
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -53,7 +51,13 @@ const delay = (min, max) => {
 };
 
 ipcMain.handle('pause-crawl', () => { isPaused = true; console.log('⏸️ 일시중지 활성화'); });
-ipcMain.handle('resume-crawl', () => { isPaused = false; console.log('▶️ 조사 재개'); });
+
+// 💡 [기능 추가] 이어하기 수신 시 새로 변경된 지역 이름을 실시간으로 연동
+ipcMain.handle('resume-crawl', (event, filter) => { 
+  isPaused = false; 
+  globalRegionFilter = filter || '전체';
+  console.log(`▶️ 조사 재개 (실시간 필터 변경 타겟: ${globalRegionFilter})`); 
+});
 
 ipcMain.handle('save-csv', async (event, data) => {
   const { filePath } = await dialog.showSaveDialog(mainWindow, {
@@ -114,8 +118,10 @@ async function getKakaoDirections(originX, originY, destX, destY) {
   return { distanceKm: '', durationStr: '' };
 }
 
-ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destination }) => {
+ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destination, regionFilter }) => {
   isPaused = false;
+  globalRegionFilter = regionFilter || '전체';
+  let lastProcessedFilter = globalRegionFilter; // 💡 변경 추적용 로컬 상태 스냅샷
   
   const originPlaceCoords = await searchKakaoKeyword(origin);
   if (!originPlaceCoords) {
@@ -212,6 +218,14 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
         await page.waitForSelector('#srch_region', { state: 'visible', timeout: 5000 });
       }
       
+      const siteRegionName = await regionLocators.nth(r).innerText();
+      // 💡 globalRegionFilter 전역 변수를 참조하도록 바인딩 변경
+      if (globalRegionFilter && globalRegionFilter !== '전체') {
+        const keywords = globalRegionFilter.split('/');
+        const isMatch = keywords.some(kw => siteRegionName.includes(kw));
+        if (!isMatch) continue; 
+      }
+      
       await regionLocators.nth(r).click();
       await delay(1500, 2500); 
 
@@ -229,6 +243,19 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
 
       for (let m = 1; m < resortCount; m++) {
         while (isPaused) { await delay(500, 500); }
+
+        // 💡 [핵심 추가] 일시중지 해제 직후, 변경 사항을 대조하여 중간 지역 하이재킹 가동
+        if (globalRegionFilter !== lastProcessedFilter) {
+          console.log(`🔄 [지역 점프 활성화] 필터가 ${lastProcessedFilter} 에서 ${globalRegionFilter} 로 변경되었습니다.`);
+          lastProcessedFilter = globalRegionFilter;
+          
+          // 열려있던 요소 꼬임 방지를 위해 일반예약 검색 메인 뼈대로 재탑승 처리
+          await page.goto('https://www.foresttrip.go.kr/rep/or/fcfsRsrvtMain.do?hmpgId=FRIP&menuId=001001', { waitUntil: 'load', timeout: 30000 });
+          await delay(1000, 1500);
+          
+          r = -1; // r이 -1로 가면 루프 증감식에 의해 0번(첫 지역)부터 완전 재탐색 구동
+          break;
+        }
 
         try {
           const isInnerResortVisible = await page.locator('#srch_rcfcl').isVisible();
