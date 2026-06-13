@@ -1,17 +1,32 @@
-require('dotenv').config(); 
 const { app, BrowserWindow, ipcMain, dialog } = require('electron');
 const path = require('path');
 const fs = require('fs');
 const { chromium } = require('playwright');
-const axios = require('axios'); 
+const axios = require('axios');
+
+// 💡 [버그 수정] 개발 환경, 폴더형(win-unpacked), 단독 실행형(Portable) 모두를 만족하는 .env 경로 연산
+let envPath;
+if (!app.isPackaged) {
+  // 1. 개발 환경 (npm start)
+  envPath = path.join(__dirname, '.env');
+} else if (process.env.PORTABLE_EXECUTABLE_DIR) {
+  // 2. 단독 실행형 파일 환경 (dist 폴더의 단독 .exe 파일 실행 시)
+  envPath = path.join(process.env.PORTABLE_EXECUTABLE_DIR, '.env');
+} else {
+  // 3. 폴더 분해형 환경 (win-unpacked 폴더 내부에서 실행 시)
+  envPath = path.join(path.dirname(app.getPath('exe')), '.env');
+}
+
+// 환경변수 로드 수행
+require('dotenv').config({ path: envPath });
+
+// ================= 카카오 API 설정 구간 =================
+const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY;
+const kakaoHeaders = { 'Authorization': `KakaoAK ${KAKAO_REST_API_KEY}` };
+// =======================================================
 
 let mainWindow;
 let isPaused = false;
-
-// ================= 카카오 API 설정 구간 =================
-const KAKAO_REST_API_KEY = process.env.KAKAO_REST_API_KEY; // 💡 환경변수에서 읽어오도록 변경
-const kakaoHeaders = { 'Authorization': `KakaoAK ${KAKAO_REST_API_KEY}` };
-// =======================================================
 
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -178,7 +193,6 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
       }
     }
 
-    // 💡 [안전 보정] 지역 선택 드롭다운 상태 감지 처리
     const isRegionOpen = await page.locator('#srch_region').isVisible();
     if (!isRegionOpen) {
       await page.click('.preview_wrap.locate');
@@ -187,13 +201,11 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
     const regionLocators = page.locator('#srch_region ul > li > a');
     const regionCount = await regionLocators.count();
     
-    // 다시 클릭하여 닫아주기 (메인 루프에서 안정적으로 제어하기 위함)
     if (await page.locator('#srch_region').isVisible()) {
       await page.click('.preview_wrap.locate');
     }
 
     for (let r = 0; r < regionCount; r++) {
-      // 💡 지역 선택 창이 안 열려있을 때만 클릭하도록 철저하게 상태 기반 제어
       const isRegVisible = await page.locator('#srch_region').isVisible();
       if (!isRegVisible) {
         await page.click('.preview_wrap.locate');
@@ -203,7 +215,6 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
       await regionLocators.nth(r).click();
       await delay(1500, 2500); 
 
-      // 💡 휴양림 선택 창이 안 열려있을 때만 클릭하도록 철저하게 상태 기반 제어
       const isResortOpen = await page.locator('#srch_rcfcl').isVisible();
       if (!isResortOpen) {
         await page.click('.preview_wrap.name');
@@ -220,7 +231,6 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
         while (isPaused) { await delay(500, 500); }
 
         try {
-          // 💡 루프 내부에서 휴양림 선택창 상태 확인 후 안전 열기 (토글 꼬임 에러 완전 방지)
           const isInnerResortVisible = await page.locator('#srch_rcfcl').isVisible();
           if (!isInnerResortVisible) {
             await page.click('.preview_wrap.name');
@@ -245,7 +255,6 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
           await page.waitForLoadState('networkidle');
           await delay(2500, 3500); 
 
-          // 💡 [핵심 에러 수술] 무한 대기를 유발하던 캠핑 체크박스 해제를 브라우저 강제 주입 JavaScript 방식으로 우회
           await page.evaluate(() => {
             const campInputs = document.querySelectorAll('#cmpgr input[name="camp"]');
             campInputs.forEach(cb => {
@@ -311,7 +320,6 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
               cleanRoomName = cleanRoomName.substring(cleanRoomName.indexOf('[')).trim();
             }
 
-            // 안전 방어 메커니즘을 추가한 연박 요금 계산기
             let cleanPrice = "0";
             if (price && price.includes('원')) {
               const priceMatches = price.match(/([0-9,]+)\s*원/g);
@@ -367,7 +375,6 @@ ipcMain.handle('start-crawl', async (event, { startDate, endDate, origin, destin
             finalResults.push(resultItem);
             console.log(`    💰 [매칭 및 전송 완료] -> ${cleanResortName} | ${cleanPrice}원`);
 
-            // 정제 및 연산 완료된 패키지를 딜레이 없이 GUI 화면으로 즉시 스트리밍 방출
             if (mainWindow && !mainWindow.isDestroyed()) {
               mainWindow.webContents.send('crawl-progress', resultItem);
             }
